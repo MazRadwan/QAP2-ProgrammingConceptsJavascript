@@ -4,11 +4,9 @@
  *
  * Please update the following with your information:
  *
- *      Name: <YOUR_NAME>
- *      Date: <SUBMISSION_DATE>
+ *      Name: Maz Radwan
+ *      Date: Mar 19, 2024
  */
-
-
 
 /*******************************************************************************
  * Problem 1: replace all internal whitespace in a string value with underscore
@@ -29,11 +27,28 @@
  * snake('A.BC') --> returns 'a_bc'
  * snake(' A..  B   C ') --> returns 'a_b_c'
  *
-  ******************************************************************************/
+ ******************************************************************************/
+// * We want to be able to convert a string to Lower Snake Case style, so that all
+//  * leading/trailing whitespace is removed, and any internal spaces, tabs, or dots,
+//  * are converted to '_' and all letters are lower cased.
 
 function snake(value) {
-  // Replace this comment with your code...
+  return value
+    .trim()
+    .replace(/\./g, " ")
+    .replace(/\s+/g, " ")
+    .replace(/\s/g, "_")
+    .toLowerCase();
 }
+
+console.log(snake("abc"));
+console.log(snake(" ABC "));
+console.log(snake("ABC"));
+console.log(snake("A BC"));
+console.log(snake(" A bC  "));
+console.log(snake("A   BC"));
+console.log(snake("A.BC"));
+console.log(snake(" A..  B   C "));
 
 /*******************************************************************************
  * Problem 2: create an HTML <video> element for the given url.
@@ -87,11 +102,35 @@ function snake(value) {
  * - The width attribute should only be added if a valid integer value (number or string) is included.  Otherwise ignore it.
  *
  * ******************************************************************************/
-
 function createVideo(src, width, controls) {
-  // Replace this comment with your code...
-}
+  // Check if width is a valid integer or string otherwise ignore it
+  const isValidWidth =
+    Number.isInteger(width) ||
+    (typeof width === "string" &&
+      width.trim() !== "" &&
+      !isNaN(width) &&
+      Number.isInteger(parseInt(width)));
 
+  return `<video src="${src.trim()}" ${
+    isValidWidth ? `width="${parseInt(width)}"` : ""
+  } ${controls ? "controls" : ""}></video>`;
+}
+//invalid value passed for width
+console.log(
+  createVideo(
+    "http://distribution.bbb3d.renderfarming.net/video/mp4/bbb_sunflower_1080p_60fps_normal.mp4",
+    "bob",
+    true
+  )
+);
+//valid value (string format) passed for width
+console.log(
+  createVideo(
+    "http://distribution.bbb3d.renderfarming.net/video/mp4/bbb_sunflower_1080p_60fps_normal.mp4",
+    "500",
+    true
+  )
+);
 /*******************************************************************************
  * Problem 3: extract Date from date string
  *
@@ -136,8 +175,22 @@ function createVideo(src, width, controls) {
  ******************************************************************************/
 
 function parseDateString(value) {
-  // Replace this comment with your code...
+  //Input validation
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    throw new Error("date must be in YYYY-MM-DD format");
+  }
+  const parts = value.split("-"); //Split the date string into parts
+  const year = parseInt(parts[0], 10);
+  const month = parseInt(parts[1], 10) - 1;
+  const day = parseInt(parts[2], 10);
+
+  //Initialize a new date object and set the year, month and day
+  //UTC is used to avoid timezone issues
+  const date = new Date(Date.UTC(year, month, day));
+
+  return date.toISOString().split("T")[0]; //trim the time part and return the date in the format YYYY-MM-DD
 }
+console.log(parseDateString("2024-01-29"));
 
 /*******************************************************************************
  * Problem 4: convert Date to date string with specified format.
@@ -169,8 +222,25 @@ function parseDateString(value) {
  ******************************************************************************/
 
 function toDateString(value) {
-  // Replace this comment with your code...
+  // validate input is date object
+  try {
+    if (!(value instanceof Date) || isNaN(value)) {
+      throw new Error("must be a valid date object");
+    }
+    // Get UTC date parts to avoid timezone issues and off by one errors
+    const year = value.getUTCFullYear();
+    const month = value.getUTCMonth() + 1;
+    const day = value.getUTCDate();
+
+    const paddedMonth = month < 10 ? `0${month}` : month;
+    const paddedDay = day < 10 ? `0${day}` : day;
+
+    return `${year}-${paddedMonth}-${paddedDay}`;
+  } catch (error) {
+    throw new Error("Invalid date");
+  }
 }
+console.log(toDateString(new Date("2024-01-29")));
 
 /*******************************************************************************
  * Problem 5: parse a geographic coordinate
@@ -197,8 +267,50 @@ function toDateString(value) {
  ******************************************************************************/
 
 function normalizeCoord(value) {
-  // Replace this comment with your code...
+  // regex pattern to match coordinates
+  const regexPattern = /\s*\[?\s*(-?\d+\.\d+)\s*,\s*(-?\d+\.\d+)\s*\]?\s*/;
+
+  const match = value.match(regexPattern);
+
+  if (match) {
+    let lat, lng;
+
+    // determine  which number is latitude and which is longitude
+    let firstNumber = parseFloat(match[1]);
+    let secondNumber = parseFloat(match[2]);
+
+    if (
+      firstNumber >= -90 &&
+      firstNumber <= 90 &&
+      secondNumber >= -180 &&
+      secondNumber <= 180
+    ) {
+      // The first number is latitude, and the second is longitude
+      lat = firstNumber;
+      lng = secondNumber;
+    } else if (
+      secondNumber >= -90 &&
+      secondNumber <= 90 &&
+      firstNumber >= -180 &&
+      firstNumber <= 180
+    ) {
+      // The first number is longitude, and the second is latitude  (swap them)
+      lat = secondNumber;
+      lng = firstNumber;
+    } else {
+      return "Invalid coordinates";
+    }
+
+    // Return the normalized coordinates
+    return `(${lat}, ${lng})`;
+  } else {
+    return "Format not recognized";
+  }
 }
+
+console.log(normalizeCoord("142.9755,-77.4369"));
+console.log(normalizeCoord("[-142.9755, 77.4369]"));
+console.log(normalizeCoord(" [ 42.9755 , -77.4369 ] "));
 
 /*******************************************************************************
  * Problem 6: format any number of coordinates as a list in a string
@@ -227,8 +339,26 @@ function normalizeCoord(value) {
  ******************************************************************************/
 
 function formatCoords(...values) {
-  // Replace this comment with your code...
+  let result = [];
+  for (let value of values) {
+    let normalized = normalizeCoord(value); // invoke normalizeCoord () function
+    // Check if the normalized result is a valid coordinate, ignoring invalid or unrecognized formats
+    if (
+      normalized !== "Format not recognized" &&
+      normalized !== "Invalid coordinates"
+    ) {
+      result.push(normalized);
+    }
+  }
+
+  return result.length > 0
+    ? `(${result.join(", ")})`
+    : "No valid coordinates found";
 }
+
+console.log(
+  formatCoords("42.9755,-77.4369", "[-162.1234, 42.9755]", "300,-9000")
+);
 
 /*******************************************************************************
  * Problem 7: determine MIME type from filename extension
@@ -283,10 +413,72 @@ function formatCoords(...values) {
  ******************************************************************************/
 
 function mimeFromFilename(filename) {
-  // Replace this comment with your code...
-  // NOTE: Use a switch statement in your solution.
+  // regular exp to match ext with or without leading '.'
+  const extensionRegex =
+    /\.?(html?|css|js|jpe?g|gif|bmp|ico|cur|png|svg|webp|mp3|wav|mp4|webm|json|mpeg|csv|ttf|woff|zip|avi)$/i;
+
+  // Find the match and extract the file extension
+  const match = filename.match(extensionRegex);
+  if (match) {
+    const extension = match[1].toLowerCase();
+    // use switch  as per assignment
+
+    switch (extension) {
+      case "html":
+      case "htm":
+        return "text/html";
+      case "css":
+        return "text/css";
+      case "js":
+        return "text/javascript";
+      case "jpg":
+      case "jpeg":
+        return "image/jpeg";
+      case "gif":
+        return "image/gif";
+      case "bmp":
+        return "image/bmp";
+      case "ico":
+      case "cur":
+        return "image/x-icon";
+      case "png":
+        return "image/png";
+      case "svg":
+        return "image/svg+xml";
+      case "webp":
+        return "image/webp";
+      case "mp3":
+        return "audio/mp3";
+      case "wav":
+        return "audio/wav";
+      case "mp4":
+        return "video/mp4";
+      case "webm":
+        return "video/webm";
+      case "json":
+        return "application/json";
+      case "mpeg":
+        return "video/mpeg";
+      case "csv":
+        return "text/csv";
+      case "ttf":
+        return "font/ttf";
+      case "woff":
+        return "font/woff";
+      case "zip":
+        return "application/zip";
+      case "avi":
+        return "video/x-msvideo";
+      default:
+        return "application/octet-stream";
+    }
+  } else {
+    return "application/octet-stream";
+  }
 }
 
+console.log(mimeFromFilename("jpeg.mp3"));
+// console.log(mimeFromFilename("readme.txt"));
 /*******************************************************************************
  * Problem 8, Part 1: generate license text and link from license code.
  *
@@ -334,9 +526,36 @@ function mimeFromFilename(filename) {
  ******************************************************************************/
 
 function generateLicenseLink(licenseCode, targetBlank) {
-  // Replace this comment with your code...
-}
+  const licenseMap = {
+    "CC-BY": "Creative Commons Attribution License",
+    "CC-BY-NC": "Creative Commons Attribution-NonCommercial License",
+    "CC-BY-SA": "Creative Commons Attribution-ShareAlike License",
+    "CC-BY-ND": "Creative Commons Attribution-NoDerivs License",
+    "CC-BY-NC-SA":
+      "Creative Commons Attribution-NonCommercial-ShareAlike License",
+    "CC-BY-NC-ND":
+      "Creative Commons Attribution-NonCommercial-NoDerivs License",
+  };
 
+  let licenseUrl = "https://choosealicense.com/no-permission/";
+  if (licenseMap[licenseCode]) {
+    licenseUrl = `https://creativecommons.org/licenses/${licenseCode
+      .toLowerCase()
+      .replace("cc-", "")}/4.0/`;
+  } else {
+    licenseUrl = "https://choosealicense.com/no-permission/";
+    licenseMap[licenseCode] = "All Rights Reserved";
+  }
+  let link = `<a href="${licenseUrl}">${licenseMap[licenseCode]}</a>`;
+
+  if (typeof targetBlank === "boolean" && targetBlank) {
+    link = link.replace(">", ' target="_blank">');
+  }
+  return link;
+}
+console.log(generateLicenseLink("CC-BY-NC"));
+console.log(generateLicenseLink("CC-BY-NC", true));
+console.log(generateLicenseLink("UNKNOWN"));
 /*******************************************************************************
  * Problem 9 Part 1: convert a value to a Boolean (true or false)
  *
@@ -360,9 +579,33 @@ function generateLicenseLink(licenseCode, targetBlank) {
  ******************************************************************************/
 
 function pureBool(value) {
-  // Replace this comment with your code...
-}
+  // check if input value is already a boolean
+  if (typeof value === "boolean") {
+    return value;
+  }
 
+  //check if the value is a string, if so, normalize it otherwise return the value
+  const normalizedValue =
+    typeof value === "string" ? value.trim().toLowerCase() : value;
+
+  // regex to match true/false values
+  const trueRegex = /^(yes|y|oui|o|t|true|vrai|v|\d+)$/;
+  const falseRegex = /^(no|n|non|f|false|faux|0|-\d+)$/;
+
+  if (trueRegex.test(normalizedValue)) {
+    return true;
+  }
+  if (falseRegex.test(normalizedValue)) {
+    return false;
+  }
+  throw new Error("invalid value");
+}
+console.log(pureBool("Yes"));
+console.log(pureBool(0));
+console.log(pureBool("OUI"));
+console.log(pureBool(-5));
+console.log(pureBool(true));
+//console.log(pureBool("Maybe"));
 /*******************************************************************************
  * Problem 9 Part 2: checking for all True or all False values in a normalized list
  *
@@ -377,18 +620,45 @@ function pureBool(value) {
  * throws on invalid data.
  ******************************************************************************/
 
-function every() {
-  // Replace this comment with your code...
+function every(...args) {
+  try {
+    return args.every((arg) => pureBool(arg));
+  } catch (error) {
+    return false;
+  }
 }
 
-function any() {
-  // Replace this comment with your code...
+function any(...args) {
+  try {
+    return args.some((arg) => pureBool(arg));
+  } catch (error) {
+    return args.slice(0, args.indexOf(error.message)).some((arg) => {
+      try {
+        return pureBool(arg);
+      } catch {
+        return false;
+      }
+    });
+  }
 }
 
-function none() {
-  // Replace this comment with your code...
+function none(...args) {
+  try {
+    return !args.some((arg) => pureBool(arg));
+  } catch (error) {
+    return args.slice(0, args.indexOf(error.message)).every((arg) => {
+      try {
+        return !pureBool(arg);
+      } catch {
+        return true;
+      }
+    });
+  }
 }
 
+console.log(every("Y", "yes", 1));
+console.log(any("Y", "no", 1));
+console.log(none("Y", "invalid", 1));
 /*******************************************************************************
  * Problem 10 - build a URL
  *
@@ -431,18 +701,40 @@ function none() {
  *
  * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/encodeURIComponent
  *
- * The following might be the parameters 
- * 
+ * The following might be the parameters
+ *
  *  "query" the query to use. Must be properly URI encoded
  * "order" the sort order to use, must be one of `ascending` or `descending`
  * "count" the number of results per page, must be 1-50
  * "license" the license to use, must be one of none, any, cc-by, cc-by-nc, cc-by-sa, cc-by-nd, cc-by-nc-sa, cc-by-nc-nd
- * 
+ *
  ******************************************************************************/
 
 function buildUrl(query, order, count, license) {
-  // Replace this comment with your code...
-  //returns the properly formatted iNaturlist URL
+  // Validate parameters
+  if (count < 1 || count > 50) {
+    throw new Error("Count must be between 1 and 50");
+  }
+  if (order !== "ascending" && order !== "descending") {
+    throw new Error('Order must be "ascending" or "descending"');
+  }
+  const validLicenses = [
+    "none",
+    "any",
+    "cc-by",
+    "cc-by-nc",
+    "cc-by-sa",
+    "cc-by-nd",
+    "cc-by-nc-sa",
+    "cc-by-nc-nd",
+  ];
+  if (!validLicenses.includes(license)) {
+    throw new Error("Invalid license value");
+  }
+
+  const encodedQuery = encodeURIComponent(query);
+
+  // Construct URL
+  return `https://api.inaturalist.org/v2/observations?query=${encodedQuery}&count=${count}&order=${order}&license=${license}`;
 }
-
-
+console.log(buildUrl("Monarch Butterfly", "ascending", 25, "cc-by"));
